@@ -2697,8 +2697,9 @@
       return;
     }
     if (data.isTouchEvent && e.type === 'mousemove') { return; }
-    var pageX = e.type === 'touchmove' ? e.targetTouches[0].pageX : e.pageX;
-    var pageY = e.type === 'touchmove' ? e.targetTouches[0].pageY : e.pageY;
+    var targetTouch = e.type === 'touchmove' && e.targetTouches && (e.targetTouches[0] || e.changedTouches[0]);
+    var pageX = e.type === 'touchmove' ? targetTouch.pageX : e.pageX;
+    var pageY = e.type === 'touchmove' ? targetTouch.pageY : e.pageY;
     if (e.preventedByNestedSwiper) {
       touches.startX = pageX;
       touches.startY = pageY;
@@ -3216,6 +3217,9 @@
     }
   }
 
+  var dummyEventAttached = false;
+  function dummyEventListener() {}
+
   function attachEvents() {
     var swiper = this;
     var params = swiper.params;
@@ -3246,6 +3250,11 @@
           target.addEventListener(touchEvents.start, swiper.onTouchStart, passiveListener);
           target.addEventListener(touchEvents.move, swiper.onTouchMove, Support.passiveListener ? { passive: false, capture: capture } : capture);
           target.addEventListener(touchEvents.end, swiper.onTouchEnd, passiveListener);
+
+          if (!dummyEventAttached) {
+            doc.addEventListener('touchstart', dummyEventListener);
+            dummyEventAttached = true;
+          }
         }
         if ((params.simulateTouch && !Device.ios && !Device.android) || (params.simulateTouch && !Support.touch && Device.ios)) {
           target.addEventListener('mousedown', swiper.onTouchStart, false);
